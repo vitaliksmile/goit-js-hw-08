@@ -1,12 +1,23 @@
 import throttle from 'lodash.throttle';
 import Player from '@vimeo/player';
-const videoPlayer = document.querySelector('iframe');
-const player = new Player(videoPlayer);
 const STORAGE_KEY = 'videoplayer-current-time';
 
-setCurrentTime();
-player.on('timeupdate', throttle(onPlay, 1000));
+const videoPlayer = document.querySelector('iframe');
+const player = new Player(videoPlayer);
 
+const onPlay = function ({ seconds }) {
+  save(STORAGE_KEY, seconds);
+};
+player.on('timeupdate', throttle(onPlay, 1000));
+function setTimePlayer() {
+  const savedData = load(STORAGE_KEY);
+  if (!savedData) {
+    return;
+  }
+  player.setCurrentTime(load(STORAGE_KEY));
+}
+
+// static
 const save = (key, value) => {
   try {
     const serializedState = JSON.stringify(value);
@@ -16,9 +27,6 @@ const save = (key, value) => {
   }
 };
 
-function onPlay({ seconds }) {
-  save(STORAGE_KEY, seconds);
-}
 const load = key => {
   try {
     const serializedState = localStorage.getItem(key);
@@ -28,10 +36,4 @@ const load = key => {
   }
 };
 
-function setCurrentTime() {
-  if (!load(STORAGE_KEY)) {
-    return;
-  }
-
-  player.setCurrentTime(load(STORAGE_KEY));
-}
+setTimePlayer();
